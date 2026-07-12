@@ -289,6 +289,72 @@ body {
     max-width: 30rem;
 }
 
+.diff-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.7rem;
+    width: min(560px, 100%);
+    margin: 0.3rem 0;
+}
+
+.diff-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 3px solid #fff;
+    border-radius: 12px;
+    padding: 0.6rem 0.5rem;
+    cursor: pointer;
+    color: #fff;
+    transition: transform 0.08s ease, background 0.15s;
+}
+
+.diff-btn:hover {
+    background: rgba(255, 255, 255, 0.32);
+    transform: translateY(-2px);
+}
+
+.diff-btn:active {
+    transform: translateY(1px);
+}
+
+.diff-name {
+    font-size: 1.15rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.diff-desc {
+    font-size: 0.72rem;
+    opacity: 0.9;
+}
+
+.diff-record {
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: gold;
+    min-height: 1em;
+}
+
+.diff-facil { border-color: #7ee787; }
+.diff-medio { border-color: #ffd54a; }
+.diff-dificil { border-color: #ff8a3d; }
+.diff-expert { border-color: #ff5252; }
+
+.fine-print {
+    font-size: 0.72rem;
+    color: #fff;
+    opacity: 0.75;
+    max-width: 26rem;
+}
+
+.victory-screen {
+    background: rgba(20, 10, 0, 0.7);
+    backdrop-filter: blur(3px);
+}
+
 .controls-help {
     color: #fff;
     font-size: 0.85rem;
@@ -393,4 +459,7 @@ kbd {
     .level-banner { top: 56px; padding: 7px 16px; }
     .lb-stage { font-size: 1.2rem; }
     .lb-theme { font-size: 0.68rem; }
+    .diff-row { grid-template-columns: repeat(2, 1fr); }
+    .diff-name { font-size: 1rem; }
+    .diff-desc { font-size: 0.65rem; }
 }

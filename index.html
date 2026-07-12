@@ -51,13 +51,37 @@
         <!-- Tela inicial -->
         <div class="overlay start-screen" id="startScreen">
             <h1 class="title">MARIO RUNNER</h1>
-            <p class="subtitle">Corra, pule, colete moedas, pegue power-ups e derrote o chefão!</p>
-            <button class="btn" id="startBtn" type="button">▶ Jogar</button>
+            <p class="subtitle">16 fases, 4 mundos, 4 chefes e um chefe final. Escolha sua dificuldade:</p>
+
+            <div class="diff-row" id="diffRow">
+                <button class="diff-btn diff-facil" data-diff="facil" type="button">
+                    <span class="diff-name">Fácil</span>
+                    <span class="diff-desc">5 vidas · ritmo calmo</span>
+                    <span class="diff-record" id="rec-facil"></span>
+                </button>
+                <button class="diff-btn diff-medio" data-diff="medio" type="button">
+                    <span class="diff-name">Médio</span>
+                    <span class="diff-desc">3 vidas · padrão</span>
+                    <span class="diff-record" id="rec-medio"></span>
+                </button>
+                <button class="diff-btn diff-dificil" data-diff="dificil" type="button">
+                    <span class="diff-name">Difícil</span>
+                    <span class="diff-desc">3 vidas · mais rápido</span>
+                    <span class="diff-record" id="rec-dificil"></span>
+                </button>
+                <button class="diff-btn diff-expert" data-diff="expert" type="button">
+                    <span class="diff-name">Expert</span>
+                    <span class="diff-desc">3 vidas · dano dobrado</span>
+                    <span class="diff-record" id="rec-expert"></span>
+                </button>
+            </div>
+
             <div class="controls-help">
                 <p><kbd>Espaço</kbd> / <kbd>↑</kbd> / toque — pular (2× no ar = pulo duplo)</p>
                 <p><kbd>P</kbd> ou <kbd>Esc</kbd> — pausar · <kbd>M</kbd> — mudo</p>
             </div>
             <a class="sys-link" href="sistema/index.html">📊 Sistema de Dados</a>
+            <p class="fine-print">Recordes salvos neste aparelho, protegidos contra edição casual.</p>
         </div>
 
         <!-- Tela de pausa -->
@@ -71,8 +95,20 @@
         <div class="overlay level-clear" id="levelClear" hidden>
             <h1 class="title gold">Fase concluída! 🎉</h1>
             <p class="final-score">Fase <span id="clearFase">1</span> vencida</p>
-            <p class="record-msg">Prepare-se para a próxima...</p>
+            <p class="record-msg" id="levelClearMsg">Prepare-se para a próxima...</p>
             <button class="btn" id="nextBtn" type="button">Próxima fase ▶</button>
+        </div>
+
+        <!-- Tela de vitória (chefe final derrotado) -->
+        <div class="overlay victory-screen" id="victoryScreen" hidden>
+            <h1 class="title gold">🏆 VOCÊ ZEROU O JOGO!</h1>
+            <p class="subtitle">Dificuldade: <span id="victoryDiff">Médio</span></p>
+            <div class="stats">
+                <p>Pontuação final: <span id="victoryScore">0</span></p>
+                <p>Moedas coletadas: <span id="victoryCoins">0</span></p>
+            </div>
+            <button class="btn" id="victoryAgainBtn" type="button">↺ Jogar de novo</button>
+            <button class="btn ghost" id="victoryMenuBtn" type="button">Escolher dificuldade</button>
         </div>
 
         <!-- Tela de game over -->
