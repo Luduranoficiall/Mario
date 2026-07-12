@@ -3,24 +3,93 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="styles.css">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MARIO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="Mario Runner — corra, pule, colete moedas, pegue power-ups e derrote o chefão!">
+    <meta name="theme-color" content="#87CEEB">
+    <link rel="stylesheet" href="styles.css">
+    <title>MARIO RUNNER</title>
 </head>
 
 <body>
-    <div class="game">
-        <img class="mario" src="img/mario.gif" alt="mario">
-        <img class="pipe" src="img/pipe.png" alt="cano">
-        <img class="clouds" src="img/clouds.png" alt="nuvem">
-        <button class="start" onclick="startGame()">Iniciar</button>
+    <div class="game" id="game">
+        <!-- Mundo (fundo, obstáculos, moedas, chefe, partículas) -->
+        <canvas id="world"></canvas>
+
+        <!-- Mario (GIF animado sobreposto ao canvas) -->
+        <img class="mario" id="mario" src="img/mario.gif" alt="mario">
+
+        <!-- HUD -->
+        <div class="hud" id="hud" hidden>
+            <div class="hud-left">
+                <div class="hearts" id="hearts" aria-label="vidas"></div>
+                <div class="hud-chip"><span class="ic">🪙</span><span id="coins">0</span></div>
+            </div>
+            <div class="hud-center">
+                <div class="hud-chip fase"><span id="faseLabel">Fase 1</span></div>
+                <div class="powerups" id="powerups"></div>
+            </div>
+            <div class="hud-right">
+                <div class="hud-chip"><span class="hud-label">PONTOS</span><span id="score">0</span></div>
+                <div class="hud-chip"><span class="hud-label">RECORDE</span><span id="highScore">0</span></div>
+                <button class="icon-btn" id="muteBtn" type="button" title="Mudo (M)">🔊</button>
+            </div>
+        </div>
+
+        <!-- Banner de fase/mundo -->
+        <div class="level-banner" id="levelBanner" hidden>
+            <span class="lb-stage" id="bannerWorld">1-1</span>
+            <span class="lb-theme" id="bannerTheme">Reino Verde</span>
+        </div>
+
+        <!-- Barra de HP do chefe -->
+        <div class="boss-bar" id="bossBar" hidden>
+            <span class="boss-name" id="bossName">👹 Chefe</span>
+            <div class="boss-hp"><div class="boss-hp-fill" id="bossHpFill"></div></div>
+        </div>
+
+        <!-- Tela inicial -->
+        <div class="overlay start-screen" id="startScreen">
+            <h1 class="title">MARIO RUNNER</h1>
+            <p class="subtitle">Corra, pule, colete moedas, pegue power-ups e derrote o chefão!</p>
+            <button class="btn" id="startBtn" type="button">▶ Jogar</button>
+            <div class="controls-help">
+                <p><kbd>Espaço</kbd> / <kbd>↑</kbd> / toque — pular (2× no ar = pulo duplo)</p>
+                <p><kbd>P</kbd> ou <kbd>Esc</kbd> — pausar · <kbd>M</kbd> — mudo</p>
+            </div>
+            <a class="sys-link" href="sistema/index.html">📊 Sistema de Dados</a>
+        </div>
+
+        <!-- Tela de pausa -->
+        <div class="overlay pause-screen" id="pauseScreen" hidden>
+            <h1 class="title">Pausado</h1>
+            <button class="btn" id="resumeBtn" type="button">Continuar</button>
+            <button class="btn ghost" id="quitBtn" type="button">Sair para o menu</button>
+        </div>
+
+        <!-- Tela de fase concluída -->
+        <div class="overlay level-clear" id="levelClear" hidden>
+            <h1 class="title gold">Fase concluída! 🎉</h1>
+            <p class="final-score">Fase <span id="clearFase">1</span> vencida</p>
+            <p class="record-msg">Prepare-se para a próxima...</p>
+            <button class="btn" id="nextBtn" type="button">Próxima fase ▶</button>
+        </div>
+
+        <!-- Tela de game over -->
+        <div class="overlay game-over" id="gameOver" hidden>
+            <img class="game-over-img" src="img/game-over.png" alt="game over">
+            <h1 class="title danger">Game Over</h1>
+            <div class="stats">
+                <p>Pontos: <span id="finalScore">0</span></p>
+                <p>Moedas: <span id="finalCoins">0</span></p>
+                <p>Fase alcançada: <span id="finalFase">1</span></p>
+            </div>
+            <p class="record-msg" id="recordMsg" hidden>🏆 Novo recorde!</p>
+            <button class="btn" id="restartBtn" type="button">↺ Jogar de novo</button>
+        </div>
     </div>
 
-    <div class="game-over">
-        <h1>Game Over :(</h1><button onclick="restartGame()">Reiniciar</button>
-    </div>
+    <script src="script.js"></script>
 </body>
-<script src="script.js"></script>
 
 </html>

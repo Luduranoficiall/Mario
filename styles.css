@@ -4,122 +4,393 @@
     box-sizing: border-box;
 }
 
+/* garante que o atributo hidden vença as regras display:flex abaixo */
+[hidden] {
+    display: none !important;
+}
+
+:root {
+    --green: #5fae34;
+    --green-dark: #3d7d1f;
+    --sky-top: #87CEEB;
+    --ink: #1c1c1c;
+}
+
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+    -webkit-user-select: none;
+    user-select: none;
+    background: #000;
+}
+
 .game {
+    position: relative;
     width: 100%;
     height: 100vh;
-    border-bottom: 30px solid green;
-    margin: 0 auto;
-    position: relative;
+    height: 100dvh;
     overflow: hidden;
-    background: linear-gradient(#87CEEB, #E0F6FF);
+    touch-action: manipulation;
 }
 
-button {
-    background: green;
-    color: white;
-    font-weight: bold;
-    font-size: 1.5rem;
-    border: none;
-    padding: 1rem;
+#world {
     position: absolute;
-    right: 50vw;
-    top: 50vh;
-    cursor: pointer;
-    z-index: 1;
+    inset: 0;
+    display: block;
 }
 
-button:hover {
-    border: 2px solid green;
-    background: none;
-    color: green;
+/* ---------- Mario (posicionado via JS) ---------- */
+.mario {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 3;
+    object-fit: contain;
+    pointer-events: none;
+    will-change: left, top;
+    filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.25));
+}
+
+/* ---------- HUD ---------- */
+.hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 6;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 12px 14px;
+    pointer-events: none;
+}
+
+.hud-left,
+.hud-center,
+.hud-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.hud-center {
+    flex-direction: column;
+    align-items: center;
+}
+
+.hud-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 5px 12px;
+    font-weight: bold;
+    color: var(--ink);
+    backdrop-filter: blur(2px);
+    font-size: 1.05rem;
+    line-height: 1;
+}
+
+.hud-chip.fase {
+    background: rgba(61, 125, 31, 0.85);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.hud-label {
+    font-size: 0.62rem;
+    letter-spacing: 1px;
+    color: var(--green-dark);
+    margin-right: 2px;
+}
+
+.hud-chip.fase .hud-label {
+    color: #eaffea;
+}
+
+.hearts {
+    font-size: 1.25rem;
+    letter-spacing: 2px;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+
+.icon-btn {
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.55);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    padding: 4px 8px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+/* power-ups ativos */
+.powerups {
+    display: flex;
+    gap: 6px;
+}
+
+.pw {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid var(--pw, #888);
+    font-size: 1rem;
+    overflow: hidden;
+}
+
+.pw i {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 4px;
+    background: var(--pw, #888);
+}
+
+/* ---------- Barra do chefe ---------- */
+.boss-bar {
+    position: absolute;
+    top: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    width: min(440px, 82%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.boss-name {
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 2px #000;
+    font-size: 0.95rem;
+}
+
+.boss-hp {
+    margin-top: 4px;
+    height: 16px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 2px solid #fff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.boss-hp-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ff5252, #ff8a3d);
+    transition: width 0.2s ease;
+}
+
+/* ---------- Banner de fase/mundo ---------- */
+.level-banner {
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-12px);
+    z-index: 7;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.55);
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    border-radius: 14px;
+    padding: 10px 22px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.level-banner.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.lb-stage {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: gold;
+    text-shadow: 2px 2px 0 #000;
+    letter-spacing: 1px;
+}
+
+.lb-theme {
+    display: block;
+    font-size: 0.8rem;
+    color: #fff;
+    margin-top: 2px;
+}
+
+/* ---------- Overlays / telas ---------- */
+.overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.5rem;
+    gap: 1rem;
+}
+
+.start-screen {
+    background: rgba(135, 206, 235, 0.6);
+    backdrop-filter: blur(3px);
+}
+
+.pause-screen,
+.level-clear {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
 }
 
 .game-over {
-    width: 100%;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.322);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    position: fixed;
-    top: 0;
-    left: 0;
+    background: rgba(0, 0, 0, 0.6);
 }
 
-.game-over h1 {
-    font-size: 3rem;
-    color: red;
-    text-align: center;
-    margin-top: 15rem;
+.game-over-img {
+    width: 110px;
+    image-rendering: pixelated;
 }
 
-.pipe {
-    position: absolute;
-    bottom: 0;
-    right: -80px;
-    width: 80px;
+.title {
+    font-size: clamp(2.2rem, 8vw, 4rem);
+    color: #fff;
+    letter-spacing: 3px;
+    text-shadow: 3px 3px 0 var(--green-dark), -1px -1px 0 var(--green-dark);
 }
 
-.mario {
-    width: 150px;
-    position: absolute;
-    bottom: 0;
+.title.danger {
+    color: #ff5252;
+    text-shadow: 3px 3px 0 #000;
 }
 
-.clouds {
-    width: 550px;
-    position: absolute;
-    top: 0;
-    animation: clouds-animation 20s infinite linear;
+.title.gold {
+    color: gold;
+    text-shadow: 3px 3px 0 #7a5a00;
 }
 
-@keyframes clouds-animation {
-    from {
-        right: -550px;
-    }
-
-    to {
-        right: 100%;
-    }
+.subtitle {
+    font-size: 1.05rem;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+    max-width: 30rem;
 }
 
-.pipe-animation {
-    animation: pipe-animation 2s infinite linear;
+.controls-help {
+    color: #fff;
+    font-size: 0.85rem;
+    opacity: 0.95;
+    line-height: 1.7;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
 }
 
-@keyframes pipe-animation {
-    from {
-        right: -80px;
-    }
-
-    to {
-        right: 100%;
-    }
+.stats {
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: bold;
+    line-height: 1.6;
 }
 
-.jump {
-    animation: jump 800ms ease-out;
+.final-score {
+    font-size: 1.4rem;
+    color: #fff;
+    font-weight: bold;
 }
 
-@keyframes jump {
-    0% {
-        bottom: 0;
-    }
+.record-msg {
+    font-size: 1.15rem;
+    color: gold;
+    font-weight: bold;
+    animation: pop 0.6s ease;
+}
 
-    40% {
-        bottom: 200px;
-    }
+@keyframes pop {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
 
-    50% {
-        bottom: 200px;
-    }
+kbd {
+    background: #fff;
+    color: var(--ink);
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-weight: bold;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+}
 
-    60% {
-        bottom: 200px;
-    }
+.sys-link {
+    margin-top: 0.4rem;
+    color: #fff;
+    font-size: 0.85rem;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    padding: 0.4rem 1rem;
+    font-weight: bold;
+    transition: background 0.15s;
+}
 
-    100% {
-        bottom: 0;
-    }
+.sys-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- Botões ---------- */
+.btn {
+    background: var(--green);
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.3rem;
+    border: 3px solid #fff;
+    border-radius: 12px;
+    padding: 0.7rem 2.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--green-dark);
+    transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s;
+}
+
+.btn:hover {
+    background: var(--green-dark);
+}
+
+.btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 var(--green-dark);
+}
+
+.btn.ghost {
+    background: transparent;
+    box-shadow: 0 4px 0 rgba(255, 255, 255, 0.3);
+    font-size: 1rem;
+    padding: 0.55rem 1.6rem;
+}
+
+.btn.ghost:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 600px) {
+    .hud-chip { font-size: 0.9rem; padding: 4px 9px; }
+    .hearts { font-size: 1.05rem; }
+    .hud-label { font-size: 0.55rem; }
+    .pw { width: 30px; height: 30px; }
+    .boss-bar { top: 58px; }
+    .controls-help { font-size: 0.75rem; }
+    .level-banner { top: 56px; padding: 7px 16px; }
+    .lb-stage { font-size: 1.2rem; }
+    .lb-theme { font-size: 0.68rem; }
 }

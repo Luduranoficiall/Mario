@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel — Sistema de Dados</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <header class="topbar">
+        <h1>📊 Sistema de Dados</h1>
+        <nav>
+            <a href="index.html">Início</a>
+            <a href="cadastro.html">Cadastro</a>
+            <a href="painel.html" class="ativo">Painel</a>
+            <a href="../index.html">🎮 Jogo</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div id="status" class="status">Carregando...</div>
+
+        <section class="resumo">
+            <div class="kpi">
+                <div class="rotulo">Lançamentos</div>
+                <div class="valor" id="totalRegistros">0</div>
+            </div>
+            <div class="kpi">
+                <div class="rotulo">Total de entradas</div>
+                <div class="valor" id="totalEntradas">R$ 0,00</div>
+            </div>
+            <div class="kpi">
+                <div class="rotulo">Total de saídas</div>
+                <div class="valor" id="totalSaidas">R$ 0,00</div>
+            </div>
+            <div class="kpi">
+                <div class="rotulo">Saldo</div>
+                <div class="valor" id="saldo">R$ 0,00</div>
+            </div>
+        </section>
+
+        <div class="card">
+            <h2>📈 Entradas e saídas por dia</h2>
+            <div class="grafico-wrap">
+                <canvas id="grafico"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🗂️ Últimos registros</h2>
+            <div class="tabela-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Categoria</th>
+                            <th>Descrição</th>
+                            <th>Cliente/Fornecedor</th>
+                            <th>Pagamento</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                            <th>Comprovante</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="rodape">Dados lidos diretamente do seu Google Sheets / Drive.</footer>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <script>carregarPainel()</script>
+</body>
+
+</html>

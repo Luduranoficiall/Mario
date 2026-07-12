@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro — Sistema de Dados</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header class="topbar">
+        <h1>📊 Sistema de Dados</h1>
+        <nav>
+            <a href="index.html">Início</a>
+            <a href="cadastro.html" class="ativo">Cadastro</a>
+            <a href="painel.html">Painel</a>
+            <a href="../index.html">🎮 Jogo</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <h2>📝 Novo cadastro / entrada</h2>
+            <div id="aviso" class="aviso" hidden></div>
+
+            <form id="formCadastro" autocomplete="off">
+                <div class="form-grid">
+                    <div class="campo">
+                        <label for="data">Data do lançamento *</label>
+                        <input type="date" id="data" name="data" required>
+                    </div>
+                    <div class="campo">
+                        <label for="tipo">Tipo *</label>
+                        <select id="tipo" name="tipo" required>
+                            <option value="Entrada">Entrada</option>
+                            <option value="Saída">Saída</option>
+                        </select>
+                    </div>
+                    <div class="campo">
+                        <label for="categoria">Categoria</label>
+                        <select id="categoria" name="categoria">
+                            <option value="Vendas">Vendas</option>
+                            <option value="Serviços">Serviços</option>
+                            <option value="Fornecedores">Fornecedores</option>
+                            <option value="Salários">Salários</option>
+                            <option value="Impostos">Impostos</option>
+                            <option value="Aluguel">Aluguel</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="campo">
+                        <label for="valor">Valor (R$) *</label>
+                        <input type="number" id="valor" name="valor" step="0.01" min="0" value="0" required>
+                    </div>
+                    <div class="campo full">
+                        <label for="descricao">Descrição *</label>
+                        <input type="text" id="descricao" name="descricao" required>
+                    </div>
+                    <div class="campo">
+                        <label for="cliente">Cliente / Fornecedor</label>
+                        <input type="text" id="cliente" name="cliente">
+                    </div>
+                    <div class="campo">
+                        <label for="documento">CPF / CNPJ</label>
+                        <input type="text" id="documento" name="documento">
+                    </div>
+                    <div class="campo">
+                        <label for="numeroDoc">Nº NF / Documento</label>
+                        <input type="text" id="numeroDoc" name="numeroDoc">
+                    </div>
+                    <div class="campo">
+                        <label for="formaPagamento">Forma de pagamento</label>
+                        <select id="formaPagamento" name="formaPagamento">
+                            <option value="Dinheiro">Dinheiro</option>
+                            <option value="Pix">Pix</option>
+                            <option value="Cartão">Cartão</option>
+                            <option value="Boleto">Boleto</option>
+                            <option value="Transferência">Transferência</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="campo">
+                        <label for="status">Status</label>
+                        <select id="status" name="status">
+                            <option value="Pago">Pago</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Atrasado">Atrasado</option>
+                        </select>
+                    </div>
+                    <div class="campo">
+                        <label for="vencimento">Vencimento</label>
+                        <input type="date" id="vencimento" name="vencimento">
+                    </div>
+                    <div class="campo full">
+                        <label for="observacao">Observações</label>
+                        <textarea id="observacao" name="observacao"></textarea>
+                    </div>
+                    <div class="campo full">
+                        <label for="arquivo">Anexar comprovante (vai para o Google Drive)</label>
+                        <input type="file" id="arquivo" name="arquivo">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">Salvar no Drive</button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="rodape">Os dados são gravados na sua planilha e os anexos na sua pasta do Drive.</footer>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Preenche a data do lançamento com o dia de hoje
+        document.getElementById('data').value = new Date().toISOString().slice(0, 10)
+
+        document.getElementById('formCadastro').addEventListener('submit', (e) => {
+            e.preventDefault()
+            enviarCadastro(e.target)
+        })
+    </script>
+</body>
+
+</html>
