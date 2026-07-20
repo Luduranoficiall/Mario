@@ -26,7 +26,7 @@ Tempo estimado: ~10 minutos. Você só precisa de uma conta Google.
 3. No topo do código, preencha os 3 valores:
    - `PLANILHA_ID` → o ID do Passo 2
    - `PASTA_DRIVE_ID` → o ID do Passo 1
-   - `API_TOKEN` → **invente uma senha forte** (ex.: `mario-2026-XK7q`). Anote, você vai
+   - `API_TOKEN` → **invente uma senha forte** (ex.: `capitao-2026-XK7q`). Anote, você vai
      usar a MESMA no Passo 5.
 4. Clique no disquete (💾 Salvar).
 
@@ -45,7 +45,7 @@ Tempo estimado: ~10 minutos. Você só precisa de uma conta Google.
    ```js
    const CONFIG = {
      WEB_APP_URL: 'https://script.google.com/macros/s/SEU_ID/exec',
-     API_TOKEN: 'mario-2026-XK7q'
+     API_TOKEN: 'capitao-2026-XK7q'
    }
    ```
 3. Pronto! Abra `sistema/cadastro.html`, faça um cadastro de teste e confira:

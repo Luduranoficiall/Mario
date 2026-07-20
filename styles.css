@@ -41,18 +41,6 @@ body {
     display: block;
 }
 
-/* ---------- Mario (posicionado via JS) ---------- */
-.mario {
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 3;
-    object-fit: contain;
-    pointer-events: none;
-    will-change: left, top;
-    filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.25));
-}
-
 /* ---------- HUD ---------- */
 .hud {
     position: absolute;
@@ -260,9 +248,9 @@ body {
     background: rgba(0, 0, 0, 0.6);
 }
 
-.game-over-img {
+.game-over-canvas {
     width: 110px;
-    image-rendering: pixelated;
+    height: 110px;
 }
 
 .title {

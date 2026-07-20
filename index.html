@@ -5,19 +5,17 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="description" content="Mario Runner — corra, pule, colete moedas, pegue power-ups e derrote o chefão!">
+    <meta name="description" content="Capitão Salto — corra, pule, colete moedas, pegue power-ups e derrote o chefão!">
     <meta name="theme-color" content="#87CEEB">
     <link rel="stylesheet" href="styles.css">
-    <title>MARIO RUNNER</title>
+    <title>CAPITÃO SALTO</title>
 </head>
 
 <body>
     <div class="game" id="game">
-        <!-- Mundo (fundo, obstáculos, moedas, chefe, partículas) -->
+        <!-- Mundo (fundo, obstáculos, moedas, chefe, partículas, herói) -->
         <canvas id="world"></canvas>
 
-        <!-- Mario (GIF animado sobreposto ao canvas) -->
-        <img class="mario" id="mario" src="img/mario.gif" alt="mario">
 
         <!-- HUD -->
         <div class="hud" id="hud" hidden>
@@ -50,7 +48,7 @@
 
         <!-- Tela inicial -->
         <div class="overlay start-screen" id="startScreen">
-            <h1 class="title">MARIO RUNNER</h1>
+            <h1 class="title">CAPITÃO SALTO</h1>
             <p class="subtitle">16 fases, 4 mundos, 4 chefes e um chefe final. Escolha sua dificuldade:</p>
 
             <div class="diff-row" id="diffRow">
@@ -113,7 +111,7 @@
 
         <!-- Tela de game over -->
         <div class="overlay game-over" id="gameOver" hidden>
-            <img class="game-over-img" src="img/game-over.png" alt="game over">
+            <canvas id="gameOverCanvas" width="140" height="140" class="game-over-canvas"></canvas>
             <h1 class="title danger">Game Over</h1>
             <div class="stats">
                 <p>Pontos: <span id="finalScore">0</span></p>
