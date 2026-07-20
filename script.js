@@ -1,20 +1,20 @@
 'use strict'
 
 /* ===========================================================
-   MARIO RUNNER — engine de runner turbinado (Canvas + DOM)
-   - Mundo (fundo, obstáculos, moedas, power-ups, chefe,
-     partículas) desenhado num <canvas>.
-   - Mario é um <img> GIF sobreposto (mantém a animação),
-     com física própria (gravidade, pulo variável, pulo duplo).
+   CAPITÃO SALTO — engine de runner turbinado (100% Canvas)
+   - Mundo e herói (fundo, obstáculos, moedas, power-ups, chefe,
+     partículas, personagem) desenhados num único <canvas>.
+   - Física própria (gravidade, pulo variável, pulo duplo).
    - Vidas, mundos temáticos (4 estilos), chefes variados,
-     Goombas, blocos "?" e fases com dificuldade crescente.
+     inimigos, blocos "?" e fases com dificuldade crescente.
+   - Personagem, cenário e trilha sonora são todos originais,
+     gerados por código (sem imagens/áudio externos).
    =========================================================== */
 
 // ---------- Canvas e contexto ----------
 const canvas = document.getElementById('world')
 const ctx = canvas.getContext('2d')
 const game = document.getElementById('game')
-const marioEl = document.getElementById('mario')
 
 let W = 0, H = 0, DPR = 1
 let groundH = 64
@@ -32,20 +32,16 @@ function resize() {
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
     groundH = W < 600 ? 48 : 64
     groundY = H - groundH
-    // dimensões do Mario proporcionais à tela
-    player.w = W < 600 ? 62 : 84
-    player.h = Math.round(player.w * 1.18)
-    marioEl.style.width = player.w + 'px'
-    marioEl.style.height = player.h + 'px'
+    // dimensões do herói proporcionais à tela
+    player.w = W < 600 ? 56 : 76
+    player.h = Math.round(player.w * 1.3)
     player.x = Math.max(40, W * 0.14)
     if (state !== STATE.PLAYING && state !== STATE.BOSS) {
         player.y = groundY - player.h
-        positionMario()
     }
 }
 
-// ---------- Imagens do cenário ----------
-const imgPipe = new Image(); imgPipe.src = 'img/pipe.png'
+// ---------- Imagens do cenário (só o que é 100% genérico/original) ----------
 const imgClouds = new Image(); imgClouds.src = 'img/clouds.png'
 
 // ---------- Elementos de HUD / telas ----------
@@ -68,6 +64,8 @@ const startScreen = document.getElementById('startScreen')
 const pauseScreen = document.getElementById('pauseScreen')
 const levelClear = document.getElementById('levelClear')
 const gameOverScreen = document.getElementById('gameOver')
+const gameOverCanvas = document.getElementById('gameOverCanvas')
+const gameOverCtx = gameOverCanvas.getContext('2d')
 const victoryScreen = document.getElementById('victoryScreen')
 
 const resumeBtn = document.getElementById('resumeBtn')
@@ -87,25 +85,9 @@ const victoryDiffEl = document.getElementById('victoryDiff')
 const victoryScoreEl = document.getElementById('victoryScore')
 const victoryCoinsEl = document.getElementById('victoryCoins')
 
-// ---------- Áudio (música + SFX procedural) ----------
-const audioTheme = new Audio('img/soung/MARIO_soung_audio_theme.mp3')
-const audioGameOver = new Audio('img/soung/MARIO_soung_audio_gameover.mp3')
-audioTheme.loop = true
-audioTheme.volume = 0.45
-audioGameOver.volume = 0.7
-
+// ---------- Áudio 100% procedural (WebAudio) — trilha e efeitos originais, sem arquivos ----------
 let muted = localStorage.getItem('mario-muted') === '1'
 let actx = null
-
-const safePlay = (audio) => {
-    if (muted) return
-    try {
-        audio.currentTime = 0
-        const p = audio.play()
-        if (p && typeof p.catch === 'function') p.catch(() => {})
-    } catch (_) { /* autoplay bloqueado */ }
-}
-const stopAudio = (audio) => { audio.pause(); audio.currentTime = 0 }
 
 // beep procedural simples (sem arquivos extras)
 function beep(freq, dur, type, vol) {
@@ -132,8 +114,27 @@ const sfx = {
     hit: () => beep(160, 0.22, 'sawtooth', 0.08),
     stomp: () => beep(300, 0.1, 'square', 0.07),
     block: () => beep(700, 0.07, 'square', 0.05),
-    win: () => { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.14, 'triangle', 0.06), i * 110)) }
+    win: () => { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.14, 'triangle', 0.06), i * 110)) },
+    gameover: () => { [392, 349, 330, 262].forEach((f, i) => setTimeout(() => beep(f, 0.4, 'sawtooth', 0.055), i * 190)) }
 }
+
+// Melodia original curta em loop (frequência Hz, duração em segundos; 0 = pausa)
+const THEME_NOTES = [
+    [523, 0.18], [523, 0.18], [659, 0.18], [784, 0.34],
+    [659, 0.18], [784, 0.18], [880, 0.34], [0, 0.14],
+    [784, 0.18], [659, 0.18], [523, 0.34], [440, 0.18],
+    [523, 0.18], [659, 0.34], [0, 0.22]
+]
+let musicTimer = null
+let themeStep = 0
+function playThemeStep() {
+    const [freq, dur] = THEME_NOTES[themeStep % THEME_NOTES.length]
+    if (freq > 0 && !muted) beep(freq, dur * 0.9, 'triangle', 0.045)
+    themeStep++
+    musicTimer = setTimeout(playThemeStep, dur * 1000)
+}
+function startMusic() { stopMusic(); themeStep = 0; playThemeStep() }
+function stopMusic() { clearTimeout(musicTimer); musicTimer = null }
 
 // ---------- Mundos temáticos ----------
 const THEMES = [
@@ -146,10 +147,10 @@ const currentTheme = () => THEMES[(level - 1) % 4]
 
 // ---------- Chefes ----------
 const BOSS_TYPES = [
-    { key: 'goombaking', name: 'Rei Goomba', icon: '👹', hpDelta: 0 },
+    { key: 'goombaking', name: 'Rei Fungo', icon: '👹', hpDelta: 0 },
     { key: 'dragon', name: 'Dragão de Fogo', icon: '🐉', hpDelta: 1 },
     { key: 'spikeball', name: 'Bola de Espinhos', icon: '⚫', hpDelta: 2 },
-    { key: 'skykoopa', name: 'Koopa Voador', icon: '🐢', hpDelta: -1 }
+    { key: 'skykoopa', name: 'Tartaruga Voadora', icon: '🐢', hpDelta: -1 }
 ]
 
 // ---------- Dificuldade e campanha ----------
@@ -169,7 +170,7 @@ let heartsMax = difficulty.hearts
 // checksum de integridade: dificulta edição casual do save no localStorage
 // e descarta o registro se detectar adulteração/corrupção.
 const SAVE_KEY = 'mario-runner-save-v1'
-const OBFUSCATION_KEY = 'MarioRunnerFortalezaDeAventuras'
+const OBFUSCATION_KEY = 'CapitaoSaltoFortalezaDeAventuras'
 
 function xorCipher(str, key) {
     let out = ''
@@ -232,9 +233,9 @@ const JUMP_V = 940
 let highScore = Number(localStorage.getItem('mario-highscore')) || 0
 
 const player = {
-    x: 80, y: 0, w: 84, h: 100,
+    x: 80, y: 0, w: 76, h: 100,
     vy: 0, onGround: true, jumps: 0, maxJumps: 1,
-    invuln: 0
+    invuln: 0, dead: false, runPhase: 0
 }
 
 let score = 0
@@ -285,11 +286,6 @@ function playerBox(pad) {
     const p = pad || 0
     return { x: player.x + p, y: player.y + p, w: player.w - p * 2, h: player.h - p * 2 }
 }
-function positionMario() {
-    marioEl.style.left = player.x + 'px'
-    marioEl.style.top = player.y + 'px'
-}
-
 // ---------- Cenário parallax ----------
 function initScenery() {
     clouds = []
@@ -523,8 +519,8 @@ function toggleMute() {
     muted = !muted
     localStorage.setItem('mario-muted', muted ? '1' : '0')
     muteBtn.textContent = muted ? '🔇' : '🔊'
-    if (muted) stopAudio(audioTheme)
-    else if (state === STATE.PLAYING || state === STATE.BOSS) safePlay(audioTheme)
+    if (muted) stopMusic()
+    else if (state === STATE.PLAYING || state === STATE.BOSS) startMusic()
 }
 muteBtn.textContent = muted ? '🔇' : '🔊'
 
@@ -533,11 +529,11 @@ function togglePause() {
         prevState = state
         state = STATE.PAUSED
         pauseScreen.hidden = false
-        audioTheme.pause()
+        stopMusic()
     } else if (state === STATE.PAUSED) {
         state = prevState
         pauseScreen.hidden = true
-        if (!muted) safePlay(audioTheme)
+        if (!muted) startMusic()
     }
 }
 let prevState = STATE.PLAYING
@@ -547,9 +543,8 @@ function resetPlayer() {
     player.vy = 0; player.jumps = 0; player.onGround = true
     player.maxJumps = 1; player.invuln = 0
     player.y = groundY - player.h
-    positionMario()
-    marioEl.classList.remove('dead')
-    marioEl.src = 'img/mario.gif'
+    player.dead = false
+    player.runPhase = 0
 }
 
 function startGame() {
@@ -576,8 +571,7 @@ function startGame() {
     updateHearts(); updateHud()
     showLevelBanner()
 
-    stopAudio(audioGameOver)
-    safePlay(audioTheme)
+    startMusic()
 
     state = STATE.PLAYING
 }
@@ -594,7 +588,7 @@ function nextLevel() {
     bossBar.hidden = true
     levelClear.hidden = true
     showLevelBanner()
-    if (!muted) safePlay(audioTheme)
+    if (!muted) startMusic()
     state = STATE.PLAYING
 }
 
@@ -618,23 +612,24 @@ function winGame() {
     state = STATE.VICTORY
     sfx.win()
     score += 1000 * difficulty.scoreMult
-    stopAudio(audioTheme)
+    stopMusic()
 
     const finalScore = Math.floor(score)
     victoryDiffEl.textContent = difficulty.label
     victoryScoreEl.textContent = finalScore
     victoryCoinsEl.textContent = coins
     saveResult(finalScore, true)
+    gameOverScreen.hidden = true
     victoryScreen.hidden = false
 }
 
 function endGame() {
     state = STATE.OVER
-    marioEl.classList.add('dead')
-    marioEl.src = 'img/game-over.png'
-    stopAudio(audioTheme)
-    safePlay(audioGameOver)
+    player.dead = true
+    stopMusic()
+    sfx.gameover()
     addParticles(player.x + player.w / 2, player.y + player.h / 2, '#ffd54a', 24, 320)
+    drawGameOverPortrait()
 
     const finalScore = Math.floor(score)
     finalScoreEl.textContent = finalScore
@@ -649,12 +644,13 @@ function endGame() {
         recordMsg.hidden = false
     }
     bossBar.hidden = true
+    victoryScreen.hidden = true
     gameOverScreen.hidden = false
 }
 
 function toMenu() {
     state = STATE.MENU
-    stopAudio(audioTheme)
+    stopMusic()
     hud.hidden = true
     bossBar.hidden = true
     pauseScreen.hidden = true
@@ -677,7 +673,7 @@ function update(dt) {
     player.maxJumps = active.djump > 0 ? 2 : 1
     if (player.invuln > 0) player.invuln -= dt
 
-    // física do Mario
+    // física do herói
     player.vy += GRAVITY * dt
     player.y += player.vy * dt
     if (player.y >= groundY - player.h) {
@@ -688,7 +684,7 @@ function update(dt) {
     } else {
         player.onGround = false
     }
-    positionMario()
+    if (player.onGround && (state === STATE.PLAYING || state === STATE.BOSS)) player.runPhase += dt * 10
 
     // cenário
     clouds.forEach(c => { c.x -= spd * 0.15 * c.s * dt; if (c.x < -160) { c.x = W + rand(0, 120); c.y = rand(20, H * 0.4) } })
@@ -1053,12 +1049,62 @@ function drawGoomba(o) {
     ctx.restore()
 }
 
+function drawPillar(o) {
+    const theme = currentTheme()
+    ctx.save()
+    if (theme.key === 'cave') {
+        // pilar de pedra
+        ctx.fillStyle = '#6b6b80'
+        ctx.fillRect(o.x, o.y, o.w, o.h)
+        ctx.fillStyle = '#54546a'
+        for (let i = 0; i < 3; i++) ctx.fillRect(o.x + 3, o.y + o.h * (0.15 + i * 0.3), o.w - 6, 5)
+        ctx.fillStyle = '#8a8aa0'
+        ctx.beginPath()
+        ctx.moveTo(o.x, o.y); ctx.lineTo(o.x + o.w * 0.5, o.y - 10); ctx.lineTo(o.x + o.w, o.y)
+        ctx.closePath(); ctx.fill()
+    } else if (theme.key === 'desert') {
+        // totem de pedra-arenito
+        ctx.fillStyle = '#c8985c'
+        ctx.fillRect(o.x, o.y, o.w, o.h)
+        ctx.fillStyle = '#a97a3d'
+        for (let i = 0; i < 3; i++) ctx.fillRect(o.x, o.y + o.h * (0.22 * (i + 1)), o.w, 4)
+        ctx.fillStyle = '#6b4a26'
+        ctx.beginPath(); ctx.arc(o.x + o.w / 2, o.y + o.h * 0.28, o.w * 0.18, 0, 6.2832); ctx.fill()
+    } else if (theme.key === 'castle') {
+        // pilar de ferro com espinhos
+        ctx.fillStyle = '#3a3a3a'
+        ctx.fillRect(o.x, o.y, o.w, o.h)
+        ctx.fillStyle = '#ff7043'
+        ctx.fillRect(o.x + 3, o.y + 8, o.w - 6, 3)
+        ctx.fillStyle = '#1f1f1f'
+        const n = Math.max(2, Math.floor(o.w / 14))
+        const sw = o.w / n
+        for (let i = 0; i < n; i++) {
+            ctx.beginPath()
+            ctx.moveTo(o.x + i * sw, o.y)
+            ctx.lineTo(o.x + i * sw + sw / 2, o.y - 9)
+            ctx.lineTo(o.x + (i + 1) * sw, o.y)
+            ctx.closePath(); ctx.fill()
+        }
+    } else {
+        // caixotes de madeira (Reino Verde)
+        ctx.fillStyle = '#9a6b3d'
+        ctx.fillRect(o.x, o.y, o.w, o.h)
+        ctx.strokeStyle = '#6b4a26'; ctx.lineWidth = 3
+        ctx.strokeRect(o.x + 2, o.y + 2, o.w - 4, o.h - 4)
+        ctx.beginPath()
+        ctx.moveTo(o.x + 2, o.y + 2); ctx.lineTo(o.x + o.w - 2, o.y + o.h - 2)
+        ctx.moveTo(o.x + o.w - 2, o.y + 2); ctx.lineTo(o.x + 2, o.y + o.h - 2)
+        ctx.stroke()
+        if (o.h > 60) ctx.strokeRect(o.x + 2, o.y + o.h / 2, o.w - 4, o.h / 2 - 2)
+    }
+    ctx.restore()
+}
+
 function drawObstacle(o) {
     if (o.kind === 'goomba') { drawGoomba(o); return }
-    if (o.kind === 'pipe' && imgPipe.complete && imgPipe.naturalWidth) {
-        ctx.drawImage(imgPipe, o.x, o.y, o.w, o.h)
-    } else if (o.kind === 'pipe') {
-        ctx.fillStyle = '#2ecc71'; ctx.fillRect(o.x, o.y, o.w, o.h)
+    if (o.kind === 'pipe') {
+        drawPillar(o)
     } else if (o.kind === 'spike') {
         ctx.fillStyle = '#7d5a3c'
         const n = Math.max(2, Math.floor(o.w / 16))
@@ -1197,6 +1243,130 @@ function drawBoss() {
     ctx.restore()
 }
 
+// ---------- Herói (Capitão Salto) — design 100% original, desenhado por código ----------
+function roundedRect(c, x, y, w, h, r) {
+    c.beginPath()
+    c.moveTo(x + r, y)
+    c.arcTo(x + w, y, x + w, y + h, r)
+    c.arcTo(x + w, y + h, x, y + h, r)
+    c.arcTo(x, y + h, x, y, r)
+    c.arcTo(x, y, x + w, y, r)
+    c.closePath()
+}
+
+function drawHeroFigure(c, cx, cy, scale, opts) {
+    opts = opts || {}
+    const dead = !!opts.dead
+    const legSwingA = opts.legSwingA || 0
+    const legSwingB = opts.legSwingB || 0
+    const armSwing = opts.armSwing || 0
+    const bodyW = 46 * scale, bodyH = 40 * scale
+    const headR = 24 * scale
+    const legLen = 30 * scale
+
+    c.save()
+    c.translate(cx, cy)
+
+    // pernas e botas
+    c.strokeStyle = '#4a2f1a'
+    c.lineWidth = 11 * scale
+    c.lineCap = 'round'
+    if (dead) {
+        c.beginPath(); c.moveTo(-bodyW * 0.2, bodyH * 0.25); c.lineTo(bodyW * 0.05, bodyH * 0.55); c.stroke()
+        c.beginPath(); c.moveTo(bodyW * 0.2, bodyH * 0.25); c.lineTo(bodyW * 0.42, bodyH * 0.5); c.stroke()
+    } else {
+        c.beginPath(); c.moveTo(-bodyW * 0.18, bodyH * 0.22); c.lineTo(-bodyW * 0.18 + legSwingA, bodyH * 0.22 + legLen); c.stroke()
+        c.beginPath(); c.moveTo(bodyW * 0.18, bodyH * 0.22); c.lineTo(bodyW * 0.18 + legSwingB, bodyH * 0.22 + legLen); c.stroke()
+        c.fillStyle = '#2e2118'
+        c.beginPath(); c.ellipse(-bodyW * 0.18 + legSwingA, bodyH * 0.22 + legLen, 9 * scale, 6 * scale, 0, 0, 6.2832); c.fill()
+        c.beginPath(); c.ellipse(bodyW * 0.18 + legSwingB, bodyH * 0.22 + legLen, 9 * scale, 6 * scale, 0, 0, 6.2832); c.fill()
+    }
+
+    // braço de trás
+    c.strokeStyle = '#e0ab7a'
+    c.lineWidth = 9 * scale
+    c.beginPath(); c.moveTo(-bodyW * 0.32, -bodyH * 0.05); c.lineTo(-bodyW * 0.32 - armSwing * 0.6, bodyH * 0.28 - armSwing * 0.4); c.stroke()
+
+    // camisa + colete
+    c.fillStyle = '#f0d2a6'
+    roundedRect(c, -bodyW / 2, -bodyH / 2, bodyW, bodyH, bodyW * 0.3)
+    c.fill()
+    c.fillStyle = dead ? '#6b8f6b' : '#2e7d32'
+    c.beginPath()
+    c.moveTo(-bodyW / 2, -bodyH * 0.35)
+    c.lineTo(bodyW / 2, -bodyH * 0.35)
+    c.lineTo(bodyW * 0.38, bodyH / 2)
+    c.lineTo(-bodyW * 0.38, bodyH / 2)
+    c.closePath(); c.fill()
+
+    // cinto e fivela
+    c.fillStyle = '#4a2f1a'
+    c.fillRect(-bodyW * 0.4, bodyH * 0.22, bodyW * 0.8, bodyH * 0.16)
+    c.fillStyle = '#e0b23d'
+    c.fillRect(-bodyW * 0.09, bodyH * 0.2, bodyW * 0.18, bodyH * 0.2)
+
+    // braço da frente
+    c.strokeStyle = '#f0d2a6'
+    c.lineWidth = 9 * scale
+    c.beginPath(); c.moveTo(bodyW * 0.32, -bodyH * 0.05); c.lineTo(bodyW * 0.32 + armSwing, bodyH * 0.28 + armSwing * 0.5); c.stroke()
+
+    // cabeça
+    const headY = -bodyH / 2 - headR * 0.75
+    c.fillStyle = '#f0d2a6'
+    c.beginPath(); c.arc(0, headY, headR, 0, 6.2832); c.fill()
+
+    if (dead) {
+        c.strokeStyle = '#3a2a1a'; c.lineWidth = 1.6 * scale
+        ;[-headR * 0.32, headR * 0.32].forEach(dx => {
+            c.beginPath(); c.arc(dx, headY, headR * 0.16, 0, 4.6); c.stroke()
+        })
+        c.beginPath(); c.arc(0, headY + headR * 0.35, headR * 0.18, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke()
+    } else {
+        c.fillStyle = '#2b1c12'
+        c.beginPath(); c.arc(headR * 0.22, headY - headR * 0.02, headR * 0.13, 0, 6.2832); c.fill()
+        c.strokeStyle = '#8a5a34'; c.lineWidth = 1.6 * scale
+        c.beginPath(); c.arc(headR * 0.05, headY + headR * 0.22, headR * 0.28, 0.05 * Math.PI, 0.55 * Math.PI); c.stroke()
+    }
+
+    // bandana + rabicho esvoaçante
+    c.fillStyle = dead ? '#8a4a42' : '#c0392b'
+    c.beginPath()
+    c.moveTo(-headR * 1.02, headY - headR * 0.05)
+    c.quadraticCurveTo(0, headY - headR * 1.35, headR * 1.02, headY - headR * 0.05)
+    c.quadraticCurveTo(headR * 0.66, headY - headR * 0.42, 0, headY - headR * 0.48)
+    c.quadraticCurveTo(-headR * 0.66, headY - headR * 0.42, -headR * 1.02, headY - headR * 0.05)
+    c.closePath(); c.fill()
+    const flapWiggle = dead ? 0 : Math.sin((opts.time || 0) * 5) * headR * 0.15
+    c.beginPath()
+    c.moveTo(headR * 0.55, headY - headR * 0.32)
+    c.quadraticCurveTo(headR * 1.5 + flapWiggle, headY - headR * 0.1, headR * 1.15, headY + headR * 0.35)
+    c.quadraticCurveTo(headR * 0.85, headY, headR * 0.55, headY - headR * 0.32)
+    c.fill()
+
+    c.restore()
+}
+
+function drawHero() {
+    if (player.dead) return
+    const airborne = !player.onGround
+    const legSwingA = airborne ? -6 : Math.sin(player.runPhase) * 12
+    const legSwingB = airborne ? 6 : Math.sin(player.runPhase + Math.PI) * 12
+    const armSwing = airborne ? -8 : Math.sin(player.runPhase + Math.PI) * 10
+    const scale = player.w / 76
+    const invisFlicker = player.invuln > 0 && Math.floor(player.invuln * 12) % 2 === 0
+    ctx.save()
+    ctx.globalAlpha = invisFlicker ? 0.35 : 1
+    drawHeroFigure(ctx, player.x + player.w / 2, player.y + player.h / 2, scale, {
+        legSwingA, legSwingB, armSwing, dead: false, time: performanceNow / 1000
+    })
+    ctx.restore()
+}
+
+function drawGameOverPortrait() {
+    gameOverCtx.clearRect(0, 0, 140, 140)
+    drawHeroFigure(gameOverCtx, 70, 78, 1.05, { dead: true })
+}
+
 function draw() {
     ctx.clearRect(0, 0, W, H)
     drawBackground()
@@ -1205,6 +1375,7 @@ function draw() {
     coinList.forEach(drawCoin)
     powerups.forEach(drawPowerup)
     obstacles.forEach(drawObstacle)
+    drawHero()
     if (state === STATE.BOSS) drawBoss()
 
     // projéteis
@@ -1222,7 +1393,7 @@ function draw() {
     })
     ctx.globalAlpha = 1
 
-    // aura de escudo em volta do Mario
+    // aura de escudo em volta do herói
     if (active.shield > 0) {
         ctx.save()
         ctx.globalAlpha = 0.35 + Math.sin(performanceNow / 120) * 0.12
@@ -1232,9 +1403,6 @@ function draw() {
         ctx.restore()
         ctx.globalAlpha = 1
     }
-
-    // piscar de invencibilidade
-    marioEl.style.opacity = (player.invuln > 0 && Math.floor(player.invuln * 12) % 2 === 0) ? '0.35' : '1'
 }
 
 // ---------- Loop ----------
@@ -1259,5 +1427,4 @@ loadGameState()
 renderRecords()
 highScoreEl.textContent = highScore
 updateHearts()
-positionMario()
 requestAnimationFrame(loop)
