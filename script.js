@@ -295,27 +295,35 @@ function initScenery() {
 }
 
 // ---------- Spawns ----------
+// Tempo mínimo de reação garantido, independente da largura da tela (celular em retrato
+// tem bem menos distância horizontal que um monitor — sem isso, o jogo fica injusto no celular).
+const MIN_REACTION_SEC = 1.4
+function hazardSpawnX() {
+    return Math.max(W + 20, player.x + worldSpeed * MIN_REACTION_SEC)
+}
+
 function spawnObstacle() {
     let pool = ['pipe', 'goomba', 'goomba']
     if (level >= 2) pool.push('spike')
     if (level >= 3) pool.push('flyer')
     if (level >= 4) pool.push('spike', 'flyer', 'goomba')
     const kind = pool[Math.floor(Math.random() * pool.length)]
+    const spawnX = hazardSpawnX()
 
     if (kind === 'pipe') {
         const h = rand(46, 78)
-        obstacles.push({ kind, x: W + 20, y: groundY - h, w: 52, h, hitPad: 8 })
+        obstacles.push({ kind, x: spawnX, y: groundY - h, w: 52, h, hitPad: 8 })
     } else if (kind === 'spike') {
         const w = rand(34, 60), h = 30
-        obstacles.push({ kind, x: W + 20, y: groundY - h, w, h, hitPad: 6 })
+        obstacles.push({ kind, x: spawnX, y: groundY - h, w, h, hitPad: 6 })
     } else if (kind === 'goomba') {
         const h = clamp(player.h * 0.62, 38, 56)
         const w = h * 0.95
-        obstacles.push({ kind, x: W + 20, y: groundY - h, w, h, hitPad: 6, bob: rand(0, 6.28), walk: rand(26, 44) })
+        obstacles.push({ kind, x: spawnX, y: groundY - h, w, h, hitPad: 6, bob: rand(0, 6.28), walk: rand(26, 44) })
     } else { // flyer
         const h = 34
         const y = groundY - rand(120, 175)
-        obstacles.push({ kind, x: W + 20, y, w: 46, h, hitPad: 8, bob: rand(0, 6.28) })
+        obstacles.push({ kind, x: spawnX, y, w: 46, h, hitPad: 8, bob: rand(0, 6.28) })
     }
 }
 
@@ -339,7 +347,7 @@ function spawnPowerup() {
 
 function spawnBlock() {
     const y = groundY - rand(150, 210)
-    blocks.push({ x: W + 20, y, w: 36, h: 36, used: false, popT: 0 })
+    blocks.push({ x: hazardSpawnX(), y, w: 36, h: 36, used: false, popT: 0 })
 }
 
 function addParticles(x, y, color, n, spread) {
