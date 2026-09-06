@@ -1,6 +1,6 @@
 # Mario Runner
 
-> **Demo ao vivo:** _(preencher depois do deploy)_
+> **Demo ao vivo:** <https://luduran-mario-game.vercel.app>
 
 Jogo estilo "corredor infinito" (igual o dinossauro do Chrome), tema Mario: pula o cano que vem
 correndo, e o jogo acelera até você errar. Feito em HTML, CSS e JavaScript puro, sem framework,
